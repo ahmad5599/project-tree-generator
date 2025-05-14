@@ -127,7 +127,7 @@ Test directly: Run node index.js --path "<path>" --ignore cache,logs to bypass C
 Development
 To contribute or modify:
 
-Clone the repository: git clone https://github.com/your-username/project-tree-generator.git
+Clone the repository: git clone https://github.com/ahmad5599/project-tree-generator.git
 Install dependencies: npm install
 Test locally: npm link
 Run tests: npm test (add tests to scripts.test in package.json)
