@@ -1,1 +1,4 @@
-node_modules test *.md
+__tests__ 
+test-data 
+node_modules 
+*.log 

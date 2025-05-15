@@ -1,29 +1,32 @@
 {
-    "name": "project-tree-generator",
-    "version": "1.0.1",
-    "description": "Generate a Markdown file with the project directory structure, ignoring common build and package folders",
-    "main": "index.js",
-    "bin": {
-      "project-tree": "./index.js"
-    },
-    "scripts": {
-      "test": "echo \"Error: no test specified\" && exit 1"
-    },
-    "keywords": [
-      "project",
-      "directory",
-      "structure",
-      "tree",
-      "markdown"
-    ],
-    "author": "Muhammad Ahmad Hamid",
-    "license": "MIT",
-    "dependencies": {
-      "commander": "^11.1.0"
-    },
-    "repository": {
-      "type": "git",
-      "url": "git+https://github.com/ahmad5599/project-tree-generator.git"
-    },
-    "homepage": "https://github.com/ahmad5599/project-tree-generator#readme"
-  }
+  "name": "project-tree-generator",
+  "version": "1.0.2",
+  "description": "Generate a Markdown file with the project directory structure, ignoring common build and package folders",
+  "main": "index.js",
+  "bin": {
+    "project-tree": "./index.js"
+  },
+  "scripts": {
+    "test": "jest"
+  },
+  "keywords": [
+    "project",
+    "directory",
+    "structure",
+    "tree",
+    "markdown"
+  ],
+  "author": "Muhammad Ahmad Hamid",
+  "license": "MIT",
+  "dependencies": {
+    "commander": "^11.1.0"
+  },
+  "devDependencies": {
+    "jest": "^29.7.0"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/ahmad5599/project-tree-generator.git"
+  },
+  "homepage": "https://github.com/ahmad5599/project-tree-generator#readme"
+}

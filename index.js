@@ -13,14 +13,11 @@ async function generateProjectTree({
 }) {
   // Common package and build folders across tech stacks
   const DEFAULT_IGNORED_DIRS = new Set([
-    // Package dependency folders
     'node_modules', 'vendor', '.dart_tool', 'packages', 'target', 'deps',
     'venv', '.venv', 'env', '.env', 'site-packages', 'bower_components', 'Pods',
-    // Build/output folders
     'dist', 'build', '.next', 'out', 'public/build', 'storage/framework/cache',
     'storage/framework/views', 'target/debug', 'target/release', 'www', 'bin',
     'obj', '.build', 'artifacts', 'coverage', '.cache', '.nuxt', '.output',
-    // Other common ignored folders
     '.git', '__pycache__', '.DS_Store', '.idea', '.vscode', '.history',
     'tmp', 'temp', 'log', 'logs'
   ]);
@@ -69,8 +66,9 @@ async function generateProjectTree({
   }
 
   // Validate and combine ignored directories
-  const invalidDirs = userIgnoredDirs.filter(dir => !dir || dir.includes(path.sep));
+  const invalidDirs = userIgnoredDirs.filter(dir => !dir || dir.includes(path.sep) || dir.includes('/'));
   if (invalidDirs.length > 0) {
+    console.log('Invalid directories detected:', invalidDirs); // Debug log
     throw new Error(`Invalid ignore directories (must be simple names, no paths): ${invalidDirs.join(', ')}`);
   }
 
@@ -83,7 +81,6 @@ async function generateProjectTree({
   async function traverseDirectory(dirPath, level = 0, traverseIndent, traversePrefix) {
     try {
       const entries = await fs.readdir(dirPath, { withFileTypes: true });
-      // Sort entries: directories first, then files, alphabetically
       entries.sort((a, b) => {
         if (a.isDirectory() === b.isDirectory()) {
           return a.name.localeCompare(b.name, undefined, { sensitivity: 'base' });
@@ -123,14 +120,14 @@ async function generateProjectTree({
     }
   }
 
-  // Generate the tree
   const rootName = path.basename(path.resolve(startPath)) + '/';
   const treeLines = [rootName, ...(await traverseDirectory(startPath, 0, indent, prefix))];
 
-  // Write to output file
   try {
     await fs.writeFile(outputFile, treeLines.join('\n'), 'utf-8');
-    console.log(`Project structure has been written to ${outputFile}`);
+    if (process.env.NODE_ENV !== 'test') {
+      console.log(`Project structure has been written to ${outputFile}`);
+    }
   } catch (err) {
     if (err.code === 'EACCES') {
       throw new Error(`Permission denied writing to ${outputFile}`);
@@ -155,7 +152,7 @@ program
         ? options.ignore.split(',').map(d => d.trim()).filter(d => d)
         : [];
       await generateProjectTree({
-        startPath: path.resolve(options.path), // Ensure absolute path
+        startPath: path.resolve(options.path),
         outputFile: options.output,
         userIgnoredDirs
       });
@@ -166,3 +163,6 @@ program
   });
 
 program.parse(process.argv);
+
+// Export for testing
+module.exports = { generateProjectTree };

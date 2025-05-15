@@ -22,7 +22,7 @@ project-tree --path "<path-to-project>" --output <output-file> --ignore <dir1,di
 
 - `--path <path>`: Project root directory (default: current directory, `.`).
 - `--output <file>`: Output Markdown file (default: `project_structure.md`).
-- `--ignore <dirs>`: Comma-separated list of directories to ignore (e.g., `cache,logs`).
+- `--ignore <dirs>`: Comma-separated list of directories to ignore (e.g., `cache,logs`). Must be simple names, not paths (e.g., `cache`, not `cache/` or `path/to/cache`).
 
 You can also create a `.projectignore` file in the project root with one directory per line to ignore additional folders.
 
@@ -118,7 +118,7 @@ Below are common errors, their causes, and solutions:
 | `Error: Permission denied accessing directory: <path>` | No read access to the directory. | Run Command Prompt as Administrator or check directory permissions with `icacls "<path>"` (Windows). |
 | `Error: Output directory does not exist: <dir>` | The parent directory for `--output` doesn't exist. | Create the output directory with `mkdir "<dir>"` or use a valid path. |
 | `Error: Permission denied writing to <file>` | No write access for the output file. | Ensure write permissions or run as Administrator. |
-| `Error: Invalid ignore directories: <dirs>` | `--ignore` includes paths (e.g., `logs/`) or empty entries. | Use simple directory names (e.g., `cache,logs`) without slashes. |
+| `Error: Invalid ignore directories: <dirs>` | `--ignore` includes paths (e.g., `logs/` or `path/to/logs`) or empty entries. | Use simple directory names (e.g., `cache,logs`) without slashes. |
 | `Warning: Could not read .projectignore: <error>` | `.projectignore` exists but is unreadable. | Check file permissions with `icacls .projectignore` (Windows) or delete `.projectignore` if not needed. |
 
 ## Troubleshooting
@@ -151,23 +151,55 @@ Below are common errors, their causes, and solutions:
 
 To contribute or modify:
 
-1. Clone the repository:
+1. **Clone the repository**:
    ```bash
    git clone https://github.com/ahmad5599/project-tree-generator.git
    ```
-2. Install dependencies:
+2. **Install dependencies**:
    ```bash
    npm install
    ```
-3. Test locally:
-   ```bash
-   npm link
-   ```
-4. Run tests:
-   ```bash
-   npm test
-   ```
-   *(Note: Add tests to `scripts.test` in `package.json`.)*
+3. **Set up test environment**:
+   - Tests use Jest. Ensure dev dependencies are installed.
+   - Create a mock test directory:
+     ```bash
+     mkdir test-data\test-dir
+     mkdir test-data\test-dir\src
+     mkdir test-data\test-dir\node_modules
+     mkdir test-data\test-dir\cache
+     echo {} > test-data\test-dir\package.json
+     echo. > test-data\test-dir\README.md
+     echo. > test-data\test-dir\src\app.js
+     ```
+   - Run tests:
+     ```bash
+     npm test
+     ```
+   - Tests are located in `__tests__/project-tree.test.js` and cover directory traversal, ignore lists, and error handling.
+4. **Test locally**:
+   - Link the package to test changes globally:
+     ```bash
+     npm link
+     ```
+   - Run the CLI:
+     ```bash
+     project-tree --path . --ignore cache,logs
+     ```
+5. **Add new tests**:
+   - Create or modify test files in `__tests__`.
+   - Example test:
+     ```javascript
+     test('ignores node_modules', async () => {
+       await generateProjectTree({ startPath: './test-data/test-dir', outputFile: 'test.md' });
+       const content = await fs.readFile('test.md', 'utf-8');
+       expect(content).not.toContain('node_modules');
+     });
+     ```
+6. **Submit changes**:
+   - Follow [CONTRIBUTING.md](CONTRIBUTING.md) (if available) for pull request guidelines.
+   - Ensure `README.md` and essential files are included in the package (see `.npmignore`).
+
+**Requirements**: Node.js >=14.0.0 (tested with Node.js v20.3.0).
 
 ## License
 
