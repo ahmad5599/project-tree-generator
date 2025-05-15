@@ -14,7 +14,8 @@
     "directory",
     "structure",
     "tree",
-    "markdown"
+    "markdown",
+    "cli"
   ],
   "author": "Muhammad Ahmad Hamid",
   "license": "MIT",
@@ -23,6 +24,9 @@
   },
   "devDependencies": {
     "jest": "^29.7.0"
+  },
+  "publishConfig": {
+    "registry": "https://npm.pkg.github.com"
   },
   "repository": {
     "type": "git",

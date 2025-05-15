@@ -1,2 +1,19 @@
 # Node modules
 node_modules/
+
+# Sensitive configuration files
+.npmrc
+
+# Log files
+*.log
+
+# Test output files
+__tests__/test-output.md
+
+# Temporary files
+*.tmp
+.DS_Store
+
+# Editor-specific files
+.vscode/
+.idea/
