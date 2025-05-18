@@ -1,6 +1,6 @@
 {
-  "name": "project-tree-generator",
-  "version": "1.0.2",
+ "name": "@ahmad5599/project-tree-generator",
+  "version": "1.0.3",
   "description": "Generate a Markdown file with the project directory structure, ignoring common build and package folders",
   "main": "index.js",
   "bin": {
@@ -24,6 +24,9 @@
   },
   "devDependencies": {
     "jest": "^29.7.0"
+  },
+  "publishConfig": {
+    "registry": "https://npm.pkg.github.com"
   },
   "repository": {
     "type": "git",

@@ -1,28 +1,41 @@
 # Project Tree Generator
 
-A CLI tool to generate a Markdown file with the project directory structure, ignoring common build and package folders across various tech stacks (e.g., Node.js, Laravel, Flutter, Django, Angular). Supports custom ignore lists via command-line options or a `.projectignore` file.
+A CLI tool to generate a Markdown file with the project directory structure, ignoring common build and package folders across various tech stacks (e.g., Node.js, Laravel, Flutter, Django, Angular). Supports custom ignore lists for directories and file extensions, as well as options to show only specific file extensions or directories.
 
 ## Installation
 
 Install globally to use the `project-tree` command from any directory:
 
+### From npmjs.com
 ```bash
 npm install -g project-tree-generator
 ```
 
+### From GitHub Packages
+```bash
+# Configure .npmrc for GitHub Packages
+echo @ahmad5599:registry=https://npm.pkg.github.com >> ~/.npmrc
+echo //npm.pkg.github.com/:_authToken=YOUR_GITHUB_TOKEN >> ~/.npmrc
+npm install -g @ahmad5599/project-tree-generator
+```
+Replace `YOUR_GITHUB_TOKEN` with a GitHub Personal Access Token with `read:packages` scope.
+
 ## Usage
 
-Run the `project-tree` command with options to specify the project path, output file, and directories to ignore:
+Run the `project-tree` command with options to customize the project path, output file, and filtering:
 
 ```bash
-project-tree --path "<path-to-project>" --output <output-file> --ignore <dir1,dir2>
+project-tree --path "<path-to-project>" --output <output-file> --ignore <dir1,dir2> --ignore-ext <ext1,ext2> --only-ext <ext1> --dirs-only
 ```
 
 ### Options
 
 - `--path <path>`: Project root directory (default: current directory, `.`).
 - `--output <file>`: Output Markdown file (default: `project_structure.md`).
-- `--ignore <dirs>`: Comma-separated list of directories to ignore (e.g., `cache,logs`). Must be simple names, not paths (e.g., `cache`, not `cache/` or `path/to/cache`).
+- `--ignore <dirs>`: Comma-separated list of directories to ignore (e.g., `cache,logs`). Must be simple names, not paths.
+- `--ignore-ext <extensions>`: Comma-separated list of file extensions to ignore (e.g., `.js,.ts`).
+- `--only-ext <extensions>`: Comma-separated list of file extensions to include exclusively (e.g., `.js`). Overrides `--ignore-ext`.
+- `--dirs-only`: Show only directories, excluding all files. Overrides `--ignore-ext` and `--only-ext` for files.
 
 You can also create a `.projectignore` file in the project root with one directory per line to ignore additional folders.
 
@@ -30,7 +43,7 @@ You can also create a `.projectignore` file in the project root with one directo
 
 ### Basic Usage (Current Directory)
 
-Generate `project_structure.md` in the current directory, ignoring default folders (e.g., `node_modules`, `dist`) and custom folders `cache` and `logs`:
+Generate `project_structure.md`, ignoring `cache` and `logs`:
 
 ```bash
 project-tree --ignore cache,logs
@@ -40,58 +53,100 @@ project-tree --ignore cache,logs
 ```
 my-project/
 ├── src/
-│   ├── components/
-│   │   ├── Button.js
+│   └── components/
+│       └── Button.js
 ├── package.json
-├── README.md
+└── README.md
+```
+
+### Ignore JavaScript Files
+
+Exclude `.js` files:
+
+```bash
+project-tree --ignore cache,logs --ignore-ext .js
+```
+
+**Output** (`project_structure.md`):
+```
+my-project/
+├── src/
+│   └── components/
+├── package.json
+└── README.md
+```
+
+### Show Only JavaScript Files
+
+Include only `.js` files:
+
+```bash
+project-tree --ignore cache,logs --only-ext .js
+```
+
+**Output** (`project_structure.md`):
+```
+my-project/
+├── src/
+│   └── components/
+│       └── Button.js
+```
+
+### Show Only Directories
+
+Show only directories:
+
+```bash
+project-tree --dirs-only
+```
+
+**Output** (`project_structure.md`):
+```
+my-project/
+├── src/
+│   └── components/
 ```
 
 ### Specify Project Path (Windows)
 
-Generate `project_structure.md` for a directory with spaces in the path:
+Generate `tree.md` for a directory with spaces:
 
 ```bash
-project-tree --path "D:\All\code\office code\Fruity-Chat\social" --ignore cache,logs
+project-tree --path "D:\All\code\office code\Fruity-Chat\social" --output tree.md --dirs-only
 ```
 
-**Output** (`D:\All\code\office code\Fruity-Chat\social\project_structure.md`):
+**Output** (`tree.md`):
 ```
 social/
 ├── src/
-│   ├── components/
-│   │   ├── Chat.js
-├── package.json
+│   └── components/
 ```
-
-**Note**: Use double quotes around paths with spaces on Windows.
 
 ### Custom Output File (Cross-Platform)
 
-Generate a custom output file `tree.md` in a Laravel project directory:
+Generate `tree.md` in a Laravel project, ignoring `.php` files:
 
 ```bash
 # Windows
-project-tree --path "C:\Projects\laravel-app" --output tree.md --ignore cache,storage
+project-tree --path "C:\Projects\laravel-app" --output tree.md --ignore cache,storage --ignore-ext .php
 
 # macOS/Linux
-project-tree --path "/home/user/laravel-app" --output tree.md --ignore cache,storage
+project-tree --path "/home/user/laravel-app" --output tree.md --ignore cache,storage --ignore-ext .php
 ```
 
 **Output** (`tree.md`):
 ```
 laravel-app/
 ├── app/
-│   ├── Http/
-│   │   ├── Controllers/
-│   │   │   ├── UserController.php
+│   └── Http/
+│       └── Controllers/
 ├── routes/
-│   ├── web.php
 ├── composer.json
 ```
 
 ### Using `.projectignore`
 
-Create a `.projectignore` file in the project root:
+Create a `.projectignore` file:
 
 ```
 cache
@@ -109,59 +164,59 @@ This ignores `cache`, `logs`, `temp`, and default folders.
 
 ## Possible Errors
 
-Below are common errors, their causes, and solutions:
-
 | Error Message | Cause | Solution |
 |---------------|-------|----------|
-| `Error: Directory does not exist: <path>` | The specified `--path` doesn't exist. | Verify the path with `dir "<path>"` (Windows) or `ls <path>` (macOS/Linux) and use quotes for spaces. |
-| `Error: Path is not a directory: <path>` | The `--path` points to a file, not a directory. | Ensure the path is a directory, not a file. |
-| `Error: Permission denied accessing directory: <path>` | No read access to the directory. | Run Command Prompt as Administrator or check directory permissions with `icacls "<path>"` (Windows). |
-| `Error: Output directory does not exist: <dir>` | The parent directory for `--output` doesn't exist. | Create the output directory with `mkdir "<dir>"` or use a valid path. |
-| `Error: Permission denied writing to <file>` | No write access for the output file. | Ensure write permissions or run as Administrator. |
-| `Error: Invalid ignore directories: <dirs>` | `--ignore` includes paths (e.g., `logs/` or `path/to/logs`) or empty entries. | Use simple directory names (e.g., `cache,logs`) without slashes. |
-| `Warning: Could not read .projectignore: <error>` | `.projectignore` exists but is unreadable. | Check file permissions with `icacls .projectignore` (Windows) or delete `.projectignore` if not needed. |
+| `Error: Directory does not exist: <path>` | The `--path` doesn't exist. | Verify with `dir "<path>"` (Windows) or `ls <path>` (macOS/Linux). |
+| `Error: Path is not a directory: <path>` | The `--path` is a file. | Ensure the path is a directory. |
+| `Error: Permission denied accessing directory: <path>` | No read access. | Run as Administrator or check permissions with `icacls "<path>"` (Windows). |
+| `Error: Output directory does not exist: <dir>` | Parent directory for `--output` doesn't exist. | Create with `mkdir "<dir>"`. |
+| `Error: Permission denied writing to <file>` | No write access for output file. | Ensure permissions or run as Administrator. |
+| `Error: Invalid ignore directories: <dirs>` | `--ignore` includes paths or empty entries. | Use simple names (e.g., `cache,logs`). |
+| `Error: Invalid ignore extensions: <exts>` | `--ignore-ext` includes invalid extensions. | Use extensions like `.js,.ts`. |
+| `Error: Invalid only extensions: <exts>` | `--only-ext` includes invalid extensions. | Use extensions like `.js`. |
+| `Warning: Could not read .projectignore: <error>` | `.projectignore` is unreadable. | Check permissions or delete `.projectignore`. |
 
 ## Troubleshooting
 
 - **Command not recognized**:
-  - Ensure `project-tree` is installed globally:
+  - Ensure global installation:
     ```bash
     npm install -g project-tree-generator
     ```
-  - Verify `%USERPROFILE%\AppData\Roaming\npm` is in your PATH:
+  - Verify PATH:
     ```bash
     echo %PATH%  # Windows
     echo $PATH   # macOS/Linux
     ```
-  - Re-link the package:
+  - Re-link:
     ```bash
     cd D:\All\code\project-tree-generator
     npm link
     ```
 - **Unexpected output**:
-  - Check ignored folders in `.projectignore` or `--ignore`.
-  - Default ignored folders include `node_modules`, `dist`, `build`, etc.
+  - Check `.projectignore`, `--ignore`, `--ignore-ext`, `--only-ext`, or `--dirs-only`.
+  - Default ignored folders include `node_modules`, `dist`, etc.
 - **Test directly**:
-  - Run the script without the CLI to isolate issues:
+  - Run without CLI:
     ```bash
-    node index.js --path "<path>" --ignore cache,logs
+    node index.js --path "<path>" --ignore cache,logs --dirs-only
     ```
 
 ## Development
 
-To contribute or modify:
+To contribute:
 
-1. **Clone the repository**:
+1. **Clone**:
    ```bash
    git clone https://github.com/ahmad5599/project-tree-generator.git
    ```
-2. **Install dependencies**:
+2. **Install**:
    ```bash
    npm install
    ```
-3. **Set up test environment**:
-   - Tests use Jest. Ensure dev dependencies are installed.
-   - Create a mock test directory:
+3. **Set up tests**:
+   - Uses Jest.
+   - Create `test-data/test-dir`:
      ```bash
      mkdir test-data\test-dir
      mkdir test-data\test-dir\src
@@ -175,19 +230,18 @@ To contribute or modify:
      ```bash
      npm test
      ```
-   - Tests are located in `__tests__/project-tree.test.js` and cover directory traversal, ignore lists, and error handling.
+   - Tests in `__tests__/project-tree.test.js`.
 4. **Test locally**:
-   - Link the package to test changes globally:
+   - Link package:
      ```bash
      npm link
      ```
-   - Run the CLI:
+   - Run:
      ```bash
-     project-tree --path . --ignore cache,logs
+     project-tree --path . --ignore cache,logs --dirs-only
      ```
-5. **Add new tests**:
-   - Create or modify test files in `__tests__`.
-   - Example test:
+5. **Add tests**:
+   - Example:
      ```javascript
      test('ignores node_modules', async () => {
        await generateProjectTree({ startPath: './test-data/test-dir', outputFile: 'test.md' });
@@ -195,11 +249,11 @@ To contribute or modify:
        expect(content).not.toContain('node_modules');
      });
      ```
-6. **Submit changes**:
-   - Follow [CONTRIBUTING.md](CONTRIBUTING.md) (if available) for pull request guidelines.
-   - Ensure `README.md` and essential files are included in the package (see `.npmignore`).
+6. **Submit**:
+   - Follow [CONTRIBUTING.md](CONTRIBUTING.md) for pull requests.
+   - Ensure `README.md` and files are included (see `.npmignore`).
 
-**Requirements**: Node.js >=14.0.0 (tested with Node.js v20.3.0).
+**Requirements**: Node.js >=14.0.0 (tested with v20.3.0).
 
 ## License
 

@@ -7,9 +7,11 @@ const { program } = require('commander');
 async function generateProjectTree({
   startPath = '.',
   indent = '│   ',
-  prefix = '├── ',
   outputFile = 'project_structure.md',
-  userIgnoredDirs = []
+  userIgnoredDirs = [],
+  ignoreExt = [],
+  onlyExt = [],
+  dirsOnly = false
 }) {
   // Common package and build folders across tech stacks
   const DEFAULT_IGNORED_DIRS = new Set([
@@ -78,7 +80,19 @@ async function generateProjectTree({
     ...fileIgnoredDirs
   ]);
 
-  async function traverseDirectory(dirPath, level = 0, traverseIndent, traversePrefix) {
+  // Validate extensions
+  const validateExtensions = (exts, type) => {
+    const invalid = exts.filter(ext => !ext || !ext.startsWith('.') || ext.includes(path.sep) || ext.includes('/'));
+    if (invalid.length > 0) {
+      throw new Error(`Invalid ${type} extensions (must start with '.' and be simple extensions): ${invalid.join(', ')}`);
+    }
+    return exts.map(ext => ext.toLowerCase());
+  };
+
+  const normalizedIgnoreExt = ignoreExt.length > 0 ? validateExtensions(ignoreExt, 'ignore') : [];
+  const normalizedOnlyExt = onlyExt.length > 0 ? validateExtensions(onlyExt, 'only') : [];
+
+  async function traverseDirectory(dirPath, level = 0, traverseIndent) {
     try {
       const entries = await fs.readdir(dirPath, { withFileTypes: true });
       entries.sort((a, b) => {
@@ -89,21 +103,33 @@ async function generateProjectTree({
       });
 
       const lines = [];
-      for (const entry of entries) {
-        if (entry.isDirectory() && ignoredDirs.has(entry.name)) {
-          continue;
+      const visibleEntries = entries.filter(entry => {
+        if (entry.isDirectory()) {
+          return !ignoredDirs.has(entry.name);
         }
+        if (dirsOnly) {
+          return false; // Exclude all files when dirsOnly is true
+        }
+        const ext = path.extname(entry.name).toLowerCase();
+        if (normalizedOnlyExt.length > 0) {
+          return normalizedOnlyExt.includes(ext);
+        }
+        return !normalizedIgnoreExt.includes(ext);
+      });
 
+      for (let i = 0; i < visibleEntries.length; i++) {
+        const entry = visibleEntries[i];
+        const isLast = i === visibleEntries.length - 1;
+        const entryPrefix = isLast ? '└── ' : '├── ';
         const indentStr = level > 0 ? traverseIndent.repeat(level) : '';
-        const entryStr = `${indentStr}${traversePrefix}${entry.name}${entry.isDirectory() ? '/' : ''}`;
+        const entryStr = `${indentStr}${entryPrefix}${entry.name}${entry.isDirectory() ? '/' : ''}`;
         lines.push(entryStr);
 
         if (entry.isDirectory()) {
           const subLines = await traverseDirectory(
             path.join(dirPath, entry.name),
             level + 1,
-            level === 0 ? traverseIndent : '    ',
-            traversePrefix
+            traverseIndent
           );
           lines.push(...subLines);
         }
@@ -111,17 +137,17 @@ async function generateProjectTree({
       return lines;
     } catch (err) {
       if (err.code === 'EACCES') {
-        return [`${traverseIndent.repeat(level)}${traversePrefix}[Permission Denied]`];
+        return [`${traverseIndent.repeat(level)}[Permission Denied]`];
       }
       if (err.code === 'ENOENT') {
-        return [`${traverseIndent.repeat(level)}${traversePrefix}[Directory Not Found]`];
+        return [`${traverseIndent.repeat(level)}[Directory Not Found]`];
       }
       throw new Error(`Failed to read directory ${dirPath}: ${err.message}`);
     }
   }
 
   const rootName = path.basename(path.resolve(startPath)) + '/';
-  const treeLines = [rootName, ...(await traverseDirectory(startPath, 0, indent, prefix))];
+  const treeLines = [rootName, ...(await traverseDirectory(startPath, 0, indent))];
 
   try {
     await fs.writeFile(outputFile, treeLines.join('\n'), 'utf-8');
@@ -144,6 +170,9 @@ program
   .name('project-tree')
   .description('Generate a project directory structure in Markdown format')
   .option('--ignore <dirs>', 'Comma-separated list of directories to ignore', '')
+  .option('--ignore-ext <extensions>', 'Comma-separated list of file extensions to ignore (e.g., .js,.ts)', '')
+  .option('--only-ext <extensions>', 'Comma-separated list of file extensions to include (e.g., .js)', '')
+  .option('--dirs-only', 'Show only directories, excluding all files')
   .option('--path <path>', 'Project root directory', '.')
   .option('--output <file>', 'Output Markdown file', 'project_structure.md')
   .action(async (options) => {
@@ -151,10 +180,20 @@ program
       const userIgnoredDirs = options.ignore
         ? options.ignore.split(',').map(d => d.trim()).filter(d => d)
         : [];
+      const ignoreExt = options.ignoreExt
+        ? options.ignoreExt.split(',').map(e => e.trim()).filter(e => e)
+        : [];
+      const onlyExt = options.onlyExt
+        ? options.onlyExt.split(',').map(e => e.trim()).filter(e => e)
+        : [];
+      const dirsOnly = options.dirsOnly || false;
       await generateProjectTree({
         startPath: path.resolve(options.path),
         outputFile: options.output,
-        userIgnoredDirs
+        userIgnoredDirs,
+        ignoreExt,
+        onlyExt,
+        dirsOnly
       });
     } catch (err) {
       console.error(`Error: ${err.message}`);
