@@ -2,3 +2,6 @@ __tests__
 test-data 
 node_modules 
 *.log 
+package-npmjs.json 
+.npmrc 
+.npmrc-npmjs 

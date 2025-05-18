@@ -3,6 +3,7 @@ node_modules/
 
 # Sensitive configuration files
 .npmrc
+.npmrc-npmjs
 
 # Log files
 *.log
